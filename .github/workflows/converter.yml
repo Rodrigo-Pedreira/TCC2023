@@ -1,0 +1,47 @@
+name: Converts .docx to .md with pandoc and pushes to branch
+
+on:
+  push:
+    branches:
+        "main"
+    paths:
+        "TCC_qComp.docx"
+
+jobs:
+  convert_via_pandoc:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Set up Git repository at main
+      uses: actions/checkout@v3
+      with:
+        ref: "main"
+
+    - name: Convert .docx to .md
+      uses: docker://pandoc/core:3-ubuntu
+      with:
+        args: >-
+          -s TCC_qComp.docx
+          -f docx
+          -t markdown
+          -o pandoc_output.md
+
+    - name: Move output and cp commit msg
+      run: |
+        mv -f pandoc_output.md ~/pandoc_output.md
+        git rev-list --format=%B --max-count=1 HEAD > ~/cmsgr.txt
+        awk '{a[i++]=$0} END {for (j=i-1; j>=0;) print a[j--] }' ~/cmsgr.txt > ~/cmsg.txt
+
+    - name: Set up Git repository at markdownb
+      uses: actions/checkout@v3
+      with:
+        ref: "markdownb"
+
+    - name: Commit and Push
+      run: |
+        mv -f ~/pandoc_output.md ./qComp.md
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+        git add qComp.md
+        git commit -F ~/cmsg.txt
+        git push
