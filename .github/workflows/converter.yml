@@ -30,7 +30,7 @@ jobs:
       run: |
         mv -f pandoc_output.md ~/pandoc_output.md
         git rev-list --format=%B --max-count=1 HEAD > ~/cmsgr.txt
-        awk '{a[i++]=$0} END {for (j=i-1; j>=0;) print a[j--] }' ~/cmsgr.txt > ~/cmsg.txt
+        awk 'NR==1{first=$0;next} NR>2{mid=mid prev ORS} {prev=$0} END{print mid ORS "----------------" ORS first}' ~/cmsgr.txt > ~/cmsg.txt
 
     - name: Set up Git repository at markdownb
       uses: actions/checkout@v3
